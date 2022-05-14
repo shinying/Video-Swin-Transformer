@@ -294,10 +294,11 @@ class UntrimmedSampleFrames:
             see this: https://github.com/open-mmlab/mmaction2/pull/89.
     """
 
-    def __init__(self, clip_len=1, frame_interval=16, start_index=None):
+    def __init__(self, clip_len=1, frame_interval=1, window_interval=16, start_index=None):
 
         self.clip_len = clip_len
         self.frame_interval = frame_interval
+        self.window_interval = window_interval
 
         if start_index is not None:
             warnings.warn('No longer support "start_index" in "SampleFrames", '
@@ -314,12 +315,14 @@ class UntrimmedSampleFrames:
         total_frames = results['total_frames']
         start_index = results['start_index']
 
-        clip_centers = np.arange(self.frame_interval // 2, total_frames,
-                                 self.frame_interval)
+        # clip_centers = np.arange(self.frame_interval // 2, total_frames,
+        #                          self.frame_interval)
+        window = self.window_interval * self.frame_interval
+        clip_centers = np.arange(window, total_frames, window)
         num_clips = clip_centers.shape[0]
         frame_inds = clip_centers[:, None] + np.arange(
             -(self.clip_len // 2), self.clip_len -
-            (self.clip_len // 2))[None, :]
+            (self.clip_len // 2))[None, :] * self.frame_interval
         # clip frame_inds to legal range
         frame_inds = np.clip(frame_inds, 0, total_frames - 1)
 

@@ -1,7 +1,7 @@
 _base_ = [
     '../../_base_/models/swin/swin_base.py', '../../_base_/default_runtime.py'
 ]
-model=dict(backbone=dict(patch_size=(2,4,4), drop_path_rate=0.2), test_cfg=dict(max_testing_views=2))
+model=dict(backbone=dict(patch_size=(2,4,4), drop_path_rate=0.2), test_cfg=dict(max_testing_views=8, feature_extraction=True))
 
 # dataset settings
 dataset_type = 'VideoDataset'
@@ -59,6 +59,22 @@ test_pipeline = [
     dict(type='Collect', keys=['imgs', 'label'], meta_keys=[]),
     dict(type='ToTensor', keys=['imgs'])
 ]
+extract_pipeline = [
+    dict(type='DecordInit'),
+    dict(
+        type='UntrimmedSampleFrames',
+        clip_len=32,
+        frame_interval=2,
+        window_interval=16),
+    dict(type='DecordDecode'),
+    dict(type='Resize', scale=(-1, 224)),
+    dict(type='CenterCrop', crop_size=224),
+    dict(type='Flip', flip_ratio=0),
+    dict(type='Normalize', **img_norm_cfg),
+    dict(type='FormatShape', input_format='NCTHW'),
+    dict(type='Collect', keys=['imgs', 'label'], meta_keys=['filename']),
+    dict(type='ToTensor', keys=['imgs'])
+]
 data = dict(
     videos_per_gpu=8,
     workers_per_gpu=4,
@@ -68,7 +84,7 @@ data = dict(
     ),
     test_dataloader=dict(
         videos_per_gpu=1,
-        workers_per_gpu=1
+        workers_per_gpu=4
     ),
     train=dict(
         type=dataset_type,
@@ -84,7 +100,7 @@ data = dict(
         type=dataset_type,
         ann_file=ann_file_test,
         data_prefix=data_root_val,
-        pipeline=test_pipeline))
+        pipeline=extract_pipeline))
 evaluation = dict(
     interval=5, metrics=['top_k_accuracy', 'mean_class_accuracy'])
 

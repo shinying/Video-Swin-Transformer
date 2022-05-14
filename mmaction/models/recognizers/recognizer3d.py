@@ -75,7 +75,7 @@ class Recognizer3D(BaseRecognizer):
             # squeeze dimensions
             feat = feat.reshape((batches, num_segs, -1))
             # temporal average pooling
-            feat = feat.mean(axis=1)
+            # feat = feat.mean(axis=1)
             return feat
 
         # should have cls_head if not extracting features

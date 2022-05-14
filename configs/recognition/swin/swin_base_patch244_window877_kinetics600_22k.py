@@ -4,7 +4,8 @@ data_root = 'data/kinetics600/train'
 data_root_val = 'data/kinetics600/val'
 ann_file_train = 'data/kinetics600/kinetics600_train_list.txt'
 ann_file_val = 'data/kinetics600/kinetics600_val_list.txt'
-ann_file_test = 'data/kinetics600/kinetics600_val_list.txt'
+# ann_file_test = 'data/kinetics600/kinetics600_val_list.txt'
+ann_file_test = 'data/nextqa_vid.txt'
 
 data = dict(
     train=dict(
