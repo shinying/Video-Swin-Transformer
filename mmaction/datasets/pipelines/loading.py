@@ -318,7 +318,7 @@ class UntrimmedSampleFrames:
         # clip_centers = np.arange(self.frame_interval // 2, total_frames,
         #                          self.frame_interval)
         window = self.window_interval * self.frame_interval
-        clip_centers = np.arange(window, total_frames, window)
+        clip_centers = np.arange(self.clip_len//2*self.frame_interval, total_frames, window)
         num_clips = clip_centers.shape[0]
         frame_inds = clip_centers[:, None] + np.arange(
             -(self.clip_len // 2), self.clip_len -
