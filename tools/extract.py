@@ -120,9 +120,11 @@ def single_gpu_extract(model, data_loader, output):
     dataset = data_loader.dataset
     prog_bar = mmcv.ProgressBar(len(dataset))
 
-    with h5py.File(output, 'w') as fd:
+    with h5py.File(output, 'a') as fd:
         for data in data_loader:
             vid_key = '/'.join(data['img_metas'].data[0][0]['filename'].split('/')[-2:]).split('.')[0]
+            if vid_key in fd:
+                continue
             del data['img_metas']
             with torch.no_grad():
                 result = model(return_loss=False, **data)
