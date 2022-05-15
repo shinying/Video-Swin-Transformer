@@ -1,7 +1,6 @@
 import argparse
 import os
 import os.path as osp
-import warnings
 
 import mmcv
 import torch
@@ -76,8 +75,9 @@ def get_key_parser(dataset=''):
     if dataset == 'nextqa':
         return lambda f: os.sep.join(osp.splitext(f)[0].split(os.sep)[-2:])
     if len(dataset):
-        import warnings
-        warning.warn(f"{dataset} is not supported. Use basenames without extension as feature keys")
+        print(f"Warning: {dataset} is not supported. Use basenames without extension as feature keys")
+    else:
+        print("Warning: No dataset name is given. Use basenames without extension as feature keys")
     return default
 
 
