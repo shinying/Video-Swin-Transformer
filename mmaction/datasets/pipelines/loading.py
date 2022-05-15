@@ -323,9 +323,13 @@ class UntrimmedSampleFrames:
         frame_inds = clip_centers[:, None] + np.arange(
             -(self.clip_len // 2), self.clip_len -
             (self.clip_len // 2))[None, :] * self.frame_interval
+        if len(frame_inds) == 0:
+            frame_inds = np.arange(0, total_frames, self.frame_interval)
+            frame_inds = np.append(frame_inds, np.repeat(frame_inds[-1], self.clip_len-len(frame_inds)))[None, :]
+            num_clips = 1
+
         # clip frame_inds to legal range
         frame_inds = np.clip(frame_inds, 0, total_frames - 1)
-
         frame_inds = np.concatenate(frame_inds) + start_index
         results['frame_inds'] = frame_inds.astype(np.int)
         results['clip_len'] = self.clip_len
