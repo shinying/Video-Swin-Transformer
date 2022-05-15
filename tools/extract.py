@@ -25,10 +25,7 @@ def parse_args():
     parser.add_argument('config', help='test config file path')
     parser.add_argument('checkpoint', help='checkpoint file')
     parser.add_argument('output', help='output feature path')
-    parser.add_argument(
-        '--out',
-        default=None,
-        help='output result file in pkl/yaml/json format')
+    parser.add_argument('--dataset', help='dataset', default='')
     parser.add_argument(
         '--fuse-conv-bn',
         action='store_true',
@@ -72,7 +69,19 @@ def turn_off_pretrained(cfg):
             turn_off_pretrained(sub_cfg)
 
 
-def single_gpu_extract(model, data_loader, output):
+def get_key_parser(dataset=''):
+    default = lambda f: osp.splitext(osp.basename(f))
+    if dataset == 'haa500':
+        return default
+    if dataset == 'nextqa'
+        return lambda f: os.sep.join(osp.splitext(f).split(os.sep)[-2:])
+    if len(dataset):
+        import warnings
+        warning.warn(f"{dataset} is not supported. Use basenames without extension as feature keys")
+    return default
+
+
+def single_gpu_extract(model, data_loader, output, key_parser):
     """Extract features with a single gpu.
     This method extracts features with a single gpu and displays test progress bar.
     Args:
@@ -83,9 +92,11 @@ def single_gpu_extract(model, data_loader, output):
     dataset = data_loader.dataset
     prog_bar = mmcv.ProgressBar(len(dataset))
 
-    with h5py.File(output, 'w') as fd:
+    with h5py.File(output, 'a') as fd:
         for data in data_loader:
-            vid_key = data['img_metas'].data[0][0]['filename'].split('/')[-1].split('.')[0]
+            vid_key = key_parser(data['img_metas'].data[0][0]['filename'])
+            if vid_key in fd:
+                continue
             del data['img_metas']
             with torch.no_grad():
                 result = model(return_loss=False, **data)
@@ -96,6 +107,7 @@ def single_gpu_extract(model, data_loader, output):
             batch_size = len(result)
             for _ in range(batch_size):
                 prog_bar.update()
+
 
 def inference_pytorch(args, cfg, distributed, data_loader):
     """Get predictions by pytorch models."""
@@ -176,8 +188,9 @@ def main():
     dataloader_setting = dict(dataloader_setting,
                               **cfg.data.get('test_dataloader', {}))
     data_loader = build_dataloader(dataset, **dataloader_setting)
+    key_parser = get_key_parser(args.dataset)
 
-    inference_pytorch(args, cfg, distributed, data_loader)
+    inference_pytorch(args, cfg, distributed, data_loader, key_parser)
 
 
 if __name__ == '__main__':
