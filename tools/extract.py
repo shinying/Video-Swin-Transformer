@@ -35,35 +35,6 @@ def parse_args():
         help='Whether to fuse conv and bn, this will slightly increase'
         'the inference speed')
     parser.add_argument(
-        '--eval',
-        type=str,
-        nargs='+',
-        help='evaluation metrics, which depends on the dataset, e.g.,'
-        ' "top_k_accuracy", "mean_class_accuracy" for video dataset')
-    parser.add_argument(
-        '--gpu-collect',
-        action='store_true',
-        help='whether to use gpu to collect results')
-    parser.add_argument(
-        '--tmpdir',
-        help='tmp directory used for collecting results from multiple '
-        'workers, available when gpu-collect is not specified')
-    parser.add_argument(
-        '--options',
-        nargs='+',
-        action=DictAction,
-        default={},
-        help='custom options for evaluation, the key-value pair in xxx=yyy '
-        'format will be kwargs for dataset.evaluate() function (deprecate), '
-        'change to --eval-options instead.')
-    parser.add_argument(
-        '--eval-options',
-        nargs='+',
-        action=DictAction,
-        default={},
-        help='custom options for evaluation, the key-value pair in xxx=yyy '
-        'format will be kwargs for dataset.evaluate() function')
-    parser.add_argument(
         '--cfg-options',
         nargs='+',
         action=DictAction,
@@ -86,13 +57,6 @@ def parse_args():
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
 
-    if args.options and args.eval_options:
-        raise ValueError(
-            '--options and --eval-options cannot be both '
-            'specified, --options is deprecated in favor of --eval-options')
-    if args.options:
-        warnings.warn('--options is deprecated in favor of --eval-options')
-        args.eval_options = args.options
     return args
 
 
@@ -116,25 +80,22 @@ def single_gpu_extract(model, data_loader, output):
         data_loader (nn.Dataloader): Pytorch data loader.
     """
     model.eval()
-    # results = []
     dataset = data_loader.dataset
     prog_bar = mmcv.ProgressBar(len(dataset))
 
     with h5py.File(output, 'w') as fd:
         for data in data_loader:
-            vid_key = '/'.join(data['img_metas'].data[0][0]['filename'].split('/')[-2:]).split('.')[0]
+            vid_key = data['img_metas'].data[0][0]['filename'].split('/')[-1].split('.')[0]
             del data['img_metas']
             with torch.no_grad():
                 result = model(return_loss=False, **data)
             fd.create_dataset(vid_key, data=result.squeeze(0))
-            # results.extend(result)
 
             # Assume result has the same length of batch_size
             # refer to https://github.com/open-mmlab/mmcv/issues/985
             batch_size = len(result)
             for _ in range(batch_size):
                 prog_bar.update()
-    return results
 
 def inference_pytorch(args, cfg, distributed, data_loader):
     """Get predictions by pytorch models."""
@@ -190,46 +151,6 @@ def main():
     cfg = Config.fromfile(args.config)
     cfg.merge_from_dict(args.cfg_options)
 
-    # # Load output_config from cfg
-    # output_config = cfg.get('output_config', {})
-    # if args.out:
-    #     # Overwrite output_config from args.out
-    #     output_config = Config._merge_a_into_b(
-    #         dict(out=args.out), output_config)
-
-    # # Load eval_config from cfg
-    # eval_config = cfg.get('eval_config', {})
-    # if args.eval:
-    #     # Overwrite eval_config from args.eval
-    #     eval_config = Config._merge_a_into_b(
-    #         dict(metrics=args.eval), eval_config)
-    # if args.eval_options:
-    #     # Add options from args.eval_options
-    #     eval_config = Config._merge_a_into_b(args.eval_options, eval_config)
-
-    # assert output_config or eval_config, \
-    #     ('Please specify at least one operation (save or eval the '
-    #      'results) with the argument "--out" or "--eval"')
-
-    # dataset_type = cfg.data.test.type
-    # if output_config.get('out', None):
-    #     if 'output_format' in output_config:
-    #         # ugly workround to make recognition and localization the same
-    #         warnings.warn(
-    #             'Skip checking `output_format` in localization task.')
-    #     else:
-    #         out = output_config['out']
-    #         # make sure the dirname of the output path exists
-    #         mmcv.mkdir_or_exist(osp.dirname(out))
-    #         _, suffix = osp.splitext(out)
-    #         if dataset_type == 'AVADataset':
-    #             assert suffix[1:] == 'csv', ('For AVADataset, the format of '
-    #                                          'the output file should be csv')
-    #         else:
-    #             assert suffix[1:] in file_handlers, (
-    #                 'The format of the output '
-    #                 'file should be json, pickle or yaml')
-
     # set cudnn benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
@@ -256,18 +177,7 @@ def main():
                               **cfg.data.get('test_dataloader', {}))
     data_loader = build_dataloader(dataset, **dataloader_setting)
 
-    outputs = inference_pytorch(args, cfg, distributed, data_loader)
-
-    rank, _ = get_dist_info()
-    if rank == 0:
-        if output_config.get('out', None):
-            out = output_config['out']
-            print(f'\nwriting results to {out}')
-            dataset.dump_results(outputs, **output_config)
-        if eval_config:
-            eval_res = dataset.evaluate(outputs, **eval_config)
-            for name, val in eval_res.items():
-                print(f'{name}: {val:.04f}')
+    inference_pytorch(args, cfg, distributed, data_loader)
 
 
 if __name__ == '__main__':
