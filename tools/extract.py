@@ -70,11 +70,11 @@ def turn_off_pretrained(cfg):
 
 
 def get_key_parser(dataset=''):
-    default = lambda f: osp.splitext(osp.basename(f))
+    default = lambda f: osp.splitext(osp.basename(f))[0]
     if dataset == 'haa500':
         return default
-    if dataset == 'nextqa'
-        return lambda f: os.sep.join(osp.splitext(f).split(os.sep)[-2:])
+    if dataset == 'nextqa':
+        return lambda f: os.sep.join(osp.splitext(f)[0].split(os.sep)[-2:])
     if len(dataset):
         import warnings
         warning.warn(f"{dataset} is not supported. Use basenames without extension as feature keys")
@@ -138,12 +138,14 @@ def inference_pytorch(args, cfg, distributed, data_loader):
         wrap_fp16_model(model)
     load_checkpoint(model, args.checkpoint, map_location='cpu')
 
+    key_parser = get_key_parser(args.dataset)
+
     if args.fuse_conv_bn:
         model = fuse_conv_bn(model)
 
     if not distributed:
         model = MMDataParallel(model, device_ids=[0])
-        outputs = single_gpu_extract(model, data_loader, args.output)
+        outputs = single_gpu_extract(model, data_loader, args.output, key_parser)
     else:
         raise NotImplementedError
         model = MMDistributedDataParallel(
@@ -154,7 +156,6 @@ def inference_pytorch(args, cfg, distributed, data_loader):
                                  args.gpu_collect)
 
     return outputs
-
 
 
 def main():
@@ -188,9 +189,8 @@ def main():
     dataloader_setting = dict(dataloader_setting,
                               **cfg.data.get('test_dataloader', {}))
     data_loader = build_dataloader(dataset, **dataloader_setting)
-    key_parser = get_key_parser(args.dataset)
 
-    inference_pytorch(args, cfg, distributed, data_loader, key_parser)
+    inference_pytorch(args, cfg, distributed, data_loader)
 
 
 if __name__ == '__main__':
