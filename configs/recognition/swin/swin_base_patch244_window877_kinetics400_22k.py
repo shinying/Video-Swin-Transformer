@@ -60,13 +60,15 @@ test_pipeline = [
     dict(type='ToTensor', keys=['imgs'])
 ]
 extract_pipeline = [
-    dict(type='DecordInit'),
+    # dict(type='DecordInit'),
+    dict(type='PyAVInit'),
     dict(
         type='UntrimmedSampleFrames',
         clip_len=32,
         frame_interval=2,
         window_interval=16),
-    dict(type='DecordDecode'),
+    # dict(type='DecordDecode'),
+    dict(type='PyAVDecode'),
     dict(type='Resize', scale=(-1, 224)),
     dict(type='CenterCrop', crop_size=224),
     dict(type='Flip', flip_ratio=0),

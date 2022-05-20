@@ -787,6 +787,9 @@ class PyAVInit:
 
         results['video_reader'] = container
         results['total_frames'] = container.streams.video[0].frames
+        if results['total_frames'] == 0:
+            result['total_frames'] = len(list(container.decode(video=0)))
+            assert result['total_frames'] > 0, results['filename']
 
         return results
 
