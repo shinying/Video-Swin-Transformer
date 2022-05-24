@@ -788,8 +788,10 @@ class PyAVInit:
         results['video_reader'] = container
         results['total_frames'] = container.streams.video[0].frames
         if results['total_frames'] == 0:
-            result['total_frames'] = len(list(container.decode(video=0)))
-            assert result['total_frames'] > 0, results['filename']
+            results['total_frames'] = len(list(container.decode(video=0)))
+            container.close()
+            results['video_reader'] = av.open(io.BytesIO(self.file_client.get(results['filename'])))
+            assert results['total_frames'] > 0, results['filename']
 
         return results
 
@@ -836,7 +838,7 @@ class PyAVDecode:
         for frame in container.decode(video=0):
             if i > max_inds + 1:
                 break
-            imgs.append(frame.to_rgb().to_ndarray())
+            imgs.append(frame.to_ndarray(format='rgb24'))
             i += 1
 
         results['video_reader'] = None
@@ -1008,12 +1010,13 @@ class DecordDecode:
 
         frame_inds = results['frame_inds']
         # Generate frame index mapping in order
-        frame_dict = {
-            idx: container[idx].asnumpy()
-            for idx in np.unique(frame_inds)
-        }
+        # frame_dict = {
+        #     idx: container[idx].asnumpy()
+        #     for idx in np.unique(frame_inds)
+        # }
 
-        imgs = [frame_dict[idx] for idx in frame_inds]
+        # imgs = [frame_dict[idx] for idx in frame_inds]
+        imgs = container.get_batch(results['frame_inds']).asnumpy()
 
         results['video_reader'] = None
         del container

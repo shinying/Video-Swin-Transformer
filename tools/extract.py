@@ -75,7 +75,7 @@ def get_key_parser(dataset=''):
     if dataset == 'nextqa':
         return lambda f: os.sep.join(osp.splitext(f)[0].split(os.sep)[-2:])
     if dataset == 'anetqa':
-        return lambda f: osp.splitext(osp.basename(f))[0].strip('v_')
+        return lambda f: osp.splitext(osp.basename(f))[0][2:]
     if len(dataset):
         print(f"Warning: {dataset} is not supported. Use basenames without extension as feature keys")
     else:
