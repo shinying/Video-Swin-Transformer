@@ -97,12 +97,11 @@ def single_gpu_extract(model, data_loader, output, key_parser):
     with h5py.File(output, 'a') as fd:
         for data in data_loader:
             vid_key = key_parser(data['img_metas'].data[0][0]['filename'])
-            if vid_key in fd:
-                continue
-            del data['img_metas']
-            with torch.no_grad():
-                result = model(return_loss=False, **data)
-            fd.create_dataset(vid_key, data=result.squeeze(0))
+            if vid_key not in fd:
+                del data['img_metas']
+                with torch.no_grad():
+                    result = model(return_loss=False, **data)
+                fd.create_dataset(vid_key, data=result.squeeze(0))
 
             # Assume result has the same length of batch_size
             # refer to https://github.com/open-mmlab/mmcv/issues/985
