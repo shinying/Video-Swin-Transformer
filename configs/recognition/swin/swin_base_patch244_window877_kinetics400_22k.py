@@ -66,7 +66,7 @@ extract_pipeline = [
         type='UntrimmedSampleFrames',
         clip_len=32,
         frame_interval=2,
-        window_interval=32),
+        window_interval=16),
     # dict(type='DecordDecode'),
     dict(type='PyAVDecode', multi_thread=True),
     dict(type='Resize', scale=(-1, 224)),

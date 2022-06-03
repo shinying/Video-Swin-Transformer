@@ -5,7 +5,7 @@ data_root_val = 'data/kinetics600/val'
 ann_file_train = 'data/kinetics600/kinetics600_train_list.txt'
 ann_file_val = 'data/kinetics600/kinetics600_val_list.txt'
 # ann_file_test = 'data/kinetics600/kinetics600_val_list.txt'
-ann_file_test = 'data/anetqa.txt'
+ann_file_test = 'data/msrvtt.txt'
 
 data = dict(
     train=dict(
