@@ -72,7 +72,7 @@ def get_key_parser(dataset=''):
     default = lambda f: osp.splitext(osp.basename(f))[0]
     if dataset == 'haa500':
         return default
-    if dataset == 'nextqa':
+    if dataset == 'nextqa' or dataset == 'webvid':
         return lambda f: os.sep.join(osp.splitext(f)[0].split(os.sep)[-2:])
     if dataset == 'anetqa':
         return lambda f: osp.splitext(osp.basename(f))[0][2:]
