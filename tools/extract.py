@@ -105,9 +105,7 @@ def single_gpu_extract(model, data_loader, output, key_parser):
 
             # Assume result has the same length of batch_size
             # refer to https://github.com/open-mmlab/mmcv/issues/985
-            batch_size = len(result)
-            for _ in range(batch_size):
-                prog_bar.update()
+            prog_bar.update()
 
 
 def inference_pytorch(args, cfg, distributed, data_loader):
