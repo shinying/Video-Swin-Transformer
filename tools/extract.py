@@ -165,6 +165,8 @@ def main():
 
     cfg = Config.fromfile(args.config)
     cfg.merge_from_dict(args.cfg_options)
+    assert cfg.data.test.ann_file, "No video list provided"
+    print("Input file:", cfg.data.test.ann_file)
 
     # set cudnn benchmark
     if cfg.get('cudnn_benchmark', False):
