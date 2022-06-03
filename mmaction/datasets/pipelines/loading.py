@@ -783,7 +783,12 @@ class PyAVInit:
             self.file_client = FileClient(self.io_backend, **self.kwargs)
 
         file_obj = io.BytesIO(self.file_client.get(results['filename']))
-        container = av.open(file_obj)
+        try:
+            container = av.open(file_obj)
+        except av.error.InvalidDataError as err:
+            print(err)
+            print('Error file:', results['filename'])
+            exit()
 
         results['video_reader'] = container
         results['total_frames'] = container.streams.video[0].frames
