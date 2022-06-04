@@ -152,7 +152,7 @@ def inference_pytorch(args, cfg, distributed):
         with h5py.File(args.output, 'r') as f:
             vidlist = [l for l in vidlist if not key_parser(l.split()[0]) in f]
 
-        print(f'Found {args.output}. Ignore completed inputs from {all_len} to {len(vidlist)}')
+        print(f'Found {args.output}. Remain {len(vidlist)}/{all_len}')
 
         filtered_file = f'/tmp/filtered_{osp.basename(cfg.data.test.ann_file)}'
         with open(filtered_file, 'w') as fd:
