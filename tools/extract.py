@@ -108,8 +108,9 @@ def single_gpu_extract(model, data_loader, output, key_parser):
             prog_bar.update()
 
 
-def inference_pytorch(args, cfg, distributed, data_loader):
-    """Get predictions by pytorch models."""
+def inference_pytorch(args, cfg, distributed):
+    """Get predictions by pytorch models.
+    """
     if args.average_clips is not None:
         # You can set average_clips during testing, it will override the
         # original setting
@@ -125,7 +126,8 @@ def inference_pytorch(args, cfg, distributed, data_loader):
     # remove redundant pretrain steps for testing
     turn_off_pretrained(cfg.model)
 
-    # build the model and load checkpoint
+    # ========== build the model and load checkpoint ========== #
+
     model = build_model(
         cfg.model, train_cfg=None, test_cfg=cfg.get('test_cfg'))
 
@@ -137,10 +139,38 @@ def inference_pytorch(args, cfg, distributed, data_loader):
         wrap_fp16_model(model)
     load_checkpoint(model, args.checkpoint, map_location='cpu')
 
-    key_parser = get_key_parser(args.dataset)
-
     if args.fuse_conv_bn:
         model = fuse_conv_bn(model)
+
+    # ========== build the dataset ========== #
+
+    key_parser = get_key_parser(args.dataset)
+
+    if osp.isfile(args.output): # resuming from incomplete trial
+        vidlist = open(cfg.data.test.ann_file).read().splitlines()
+        all_len = len(vidlist)
+        with h5py.File(args.output, 'r') as f:
+            vidlist = [l for l in vidlist if not key_parser(l.split()[0]) in f]
+
+        print(f'Found {args.output}. Ignore completed inputs from {all_len} to {len(vidlist)}')
+
+        filtered_file = f'/tmp/filtered_{osp.basename(cfg.data.test.ann_file)}'
+        with open(filtered_file, 'w') as fd:
+            for l in vidlist:
+                print(l, file=fd)
+        cfg.data.test.ann_file = filtered_file
+
+    dataset = build_dataset(cfg.data.test, dict(test_mode=True))
+    dataloader_setting = dict(
+        videos_per_gpu=cfg.data.get('videos_per_gpu', 1),
+        workers_per_gpu=cfg.data.get('workers_per_gpu', 1),
+        dist=distributed,
+        shuffle=False)
+    dataloader_setting = dict(dataloader_setting,
+                              **cfg.data.get('test_dataloader', {}))
+    data_loader = build_dataloader(dataset, **dataloader_setting)
+
+    # ========== extract feature ========== #
 
     if not distributed:
         model = MMDataParallel(model, device_ids=[0])
@@ -180,18 +210,7 @@ def main():
     # The flag is used to register module's hooks
     cfg.setdefault('module_hooks', [])
 
-    # build the dataloader
-    dataset = build_dataset(cfg.data.test, dict(test_mode=True))
-    dataloader_setting = dict(
-        videos_per_gpu=cfg.data.get('videos_per_gpu', 1),
-        workers_per_gpu=cfg.data.get('workers_per_gpu', 1),
-        dist=distributed,
-        shuffle=False)
-    dataloader_setting = dict(dataloader_setting,
-                              **cfg.data.get('test_dataloader', {}))
-    data_loader = build_dataloader(dataset, **dataloader_setting)
-
-    inference_pytorch(args, cfg, distributed, data_loader)
+    inference_pytorch(args, cfg, distributed)
 
 
 if __name__ == '__main__':
