@@ -31,6 +31,13 @@ class Recognizer3D(BaseRecognizer):
     def _do_test(self, imgs):
         """Defines the computation performed at every call when evaluation,
         testing and gradcam."""
+        try:
+            imgs = imgs.cuda()
+        except RuntimeError as e:
+            if 'out of memory' not in str(e):
+                raise e
+        on_cuda = imgs.is_cuda
+
         batches = imgs.shape[0]
         num_segs = imgs.shape[1]
         imgs = imgs.reshape((-1, ) + imgs.shape[2:])
@@ -44,6 +51,9 @@ class Recognizer3D(BaseRecognizer):
             feats = []
             while view_ptr < total_views:
                 batch_imgs = imgs[view_ptr:view_ptr + self.max_testing_views]
+                if not on_cuda:
+                    batch_imgs = batch_imgs.cuda()
+
                 x = self.extract_feat(batch_imgs)
                 if self.with_neck:
                     x, _ = self.neck(x)

@@ -173,7 +173,8 @@ def inference_pytorch(args, cfg, distributed):
     # ========== extract feature ========== #
 
     if not distributed:
-        model = MMDataParallel(model, device_ids=[0])
+        # model = MMDataParallel(model, device_ids=[0])
+        model = model.cuda()
         outputs = single_gpu_extract(model, data_loader, args.output, key_parser)
     else:
         raise NotImplementedError
