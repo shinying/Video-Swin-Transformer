@@ -16,7 +16,7 @@ Create a video list with each line containing a video path and a dummy label. Fo
 ...
 ```
 
-### Checkpoint
+### Checkpoints
 
 Download checkpoints from the orginal repo.
 
