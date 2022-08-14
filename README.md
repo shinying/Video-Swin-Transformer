@@ -49,7 +49,7 @@ python tools/extract.py \
 ```
 
 Set `data.test.pipeline.1.window_interval` to adjust the number of frames between two windows. \
-Set `model.test_cfg.max_testing_views` to fit your GPU memory size. \
+Set `model.test_cfg.max_testing_views` to fit your GPU memory size.
 
 The features of all videos are collected in an hdf5 file `OUTPUT`. \
 Specify `--dataset` if you need a customed key for mapping to video feature in the hdf5 file. \
