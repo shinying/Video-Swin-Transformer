@@ -23,7 +23,14 @@ Download checkpoints from the orginal repo.
 ## Usage
 
 ```
-python tools/extract.py CONFIG CHECKPOINT OUTPUT --cfg-options data.test.ann_file=FILE_LIST [OTHER_OPTIONS] [--dataset DATASET] 
+python tools/extract.py \
+    CONFIG \
+    CHECKPOINT \
+    OUTPUT \
+    --cfg-options \
+        data.test.ann_file=FILE_LIST \
+        [OTHER_OPTIONS] \
+    [--dataset DATASET] 
 ```
 
 Our implementation only supports feature extraction with Swin-B pre-trained on Kinetics 400 or 600.
@@ -44,6 +51,6 @@ python tools/extract.py \
 Set `data.test.pipeline.1.window_interval` to adjust the number of frames between two windows. \
 Set `model.test_cfg.max_testing_views` to fit your GPU memory. \
 Specify `--dataset` if you need a customed key for mapping to video feature in the h5 file. \
-You have to implement the key parser in the function `get_key_parser` in `tools/extract.py`, which, given a video path, outputs the video feature key. \
+You have to implement the key parser in the function `get_key_parser` in [`tools/extract.py`](https://github.com/shinying/Video-Swin-Transformer/blob/d5f54a3dd3bdf5ae4a369d22d4303d2d51887a27/tools/extract.py#L71), which, given a video path, outputs the video feature key. \
 The default feature key of a video is its file name without the path and extension.
 
