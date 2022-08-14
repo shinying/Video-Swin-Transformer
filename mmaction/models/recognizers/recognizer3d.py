@@ -31,6 +31,9 @@ class Recognizer3D(BaseRecognizer):
     def _do_test(self, imgs):
         """Defines the computation performed at every call when evaluation,
         testing and gradcam."""
+
+        # if cuda memory cannot afford all images,
+        # move `max_testing_views` images to cuda at every iteration.
         try:
             imgs = imgs.cuda()
         except RuntimeError as e:
