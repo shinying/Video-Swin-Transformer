@@ -70,14 +70,12 @@ def turn_off_pretrained(cfg):
 
 def get_key_parser(dataset=''):
     default = lambda f: osp.splitext(osp.basename(f))[0]
-    if dataset == 'haa500':
-        return default
-    if dataset == 'nextqa' or dataset == 'webvid':
+    if dataset == 'webvid':
         return lambda f: os.sep.join(osp.splitext(f)[0].split(os.sep)[-2:])
     if dataset == 'anetqa':
         return lambda f: osp.splitext(osp.basename(f))[0][2:]
     if len(dataset):
-        print(f"Warning: {dataset} is not supported. Use basenames without extension as feature keys")
+        print(f"Warning: dataset `{dataset}` is not supported. Use basenames without extension as feature keys")
     else:
         print("Warning: No dataset name is given. Use basenames without extension as feature keys")
     return default
