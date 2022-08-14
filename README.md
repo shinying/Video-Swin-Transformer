@@ -33,7 +33,7 @@ python tools/extract.py \
     [--dataset DATASET] 
 ```
 
-Our implementation only supports feature extraction with Swin-B pre-trained on Kinetics 400 or 600.
+This implementation only supports feature extraction with Swin-B pre-trained on Kinetics 400 or 600 and running on a single GPU.
 For example, to extract features of [VATEX](https://eric-xw.github.io/vatex-website/index.html) with Swin-B pre-trained on Kinetics 600,
 
 ```sh
@@ -49,8 +49,10 @@ python tools/extract.py \
 ```
 
 Set `data.test.pipeline.1.window_interval` to adjust the number of frames between two windows. \
-Set `model.test_cfg.max_testing_views` to fit your GPU memory. \
-Specify `--dataset` if you need a customed key for mapping to video feature in the h5 file. \
+Set `model.test_cfg.max_testing_views` to fit your GPU memory size. \
+
+The features of all videos are collected in an hdf5 file `OUTPUT`. \
+Specify `--dataset` if you need a customed key for mapping to video feature in the hdf5 file. \
 You have to implement the key parser in the function `get_key_parser` in [`tools/extract.py`](https://github.com/shinying/Video-Swin-Transformer/blob/d5f54a3dd3bdf5ae4a369d22d4303d2d51887a27/tools/extract.py#L71), which, given a video path, outputs the video feature key. \
 The default feature key of a video is its file name without the path and extension.
 
