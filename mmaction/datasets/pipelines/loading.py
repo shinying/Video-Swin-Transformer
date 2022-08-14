@@ -787,9 +787,8 @@ class PyAVInit:
             container = av.open(file_obj, metadata_errors='ignore')
             results['total_frames'] = container.streams.video[0].frames
         except Exception as err:
-            print(err)
             print('Error file:', results['filename'])
-            exit(1)
+            raise err
 
         results['video_reader'] = container
         if results['total_frames'] == 0:
